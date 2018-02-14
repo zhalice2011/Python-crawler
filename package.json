@@ -1,0 +1,19 @@
+{
+  "name": "lao4g",
+  "version": "1.0.0",
+  "description": "Python小爬虫",
+  "main": "lao4g.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhalice2011/Python-crawler.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zhalice2011/Python-crawler/issues"
+  },
+  "homepage": "https://github.com/zhalice2011/Python-crawler#readme"
+}
