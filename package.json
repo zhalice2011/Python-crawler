@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/zhalice2011/Python-crawler/issues"
   },
-  "homepage": "https://github.com/zhalice2011/Python-crawler#readme"
+  "homepage": "https://github.com/zhalice2011/Python-crawler#readme",
+  "dependencies": {
+    "mongoose": "^5.0.6",
+    "puppeteer": "^1.0.0"
+  }
 }

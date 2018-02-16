@@ -1,13 +1,26 @@
-const puppeteer = require('puppeteer')
+const puppeteer = require('puppeteer');
+const mongoose = require('mongoose');
 
 //  老司机的地址
 const url = `https://lao4g.win/`
+
+// 连接数据库
+mongoose.connect('mongodb://localhost/lao4g',() => {
+  console.log('Mongodb Connect to lao4g')
+});
+
+// 定义一个数据表
+const Article = mongoose.model('Article', {
+  href: String,
+  title: String,
+  time: String,
+  content: String
+});
 
 // 定义一个promise的定时函数
 const sleep = time => new Promise(resolve => {
   setTimeout(resolve, time)
 })
-
 
 // 自运行函数
 ;(async () => {
@@ -29,12 +42,9 @@ const sleep = time => new Promise(resolve => {
   // 4.获取所有的标题和对应的地址
   const title = await page.evaluate(() => {
     // 获取所有的a标签
-    // 获取所有的图片的dom元素
-    var elems = document.querySelectorAll('.fit a')
+    var elems = document.querySelectorAll('.torso .fit a')
     console.log('elems', elems)
-    
     var values = Array.prototype.map.call(elems, function(obj) {
-      console.log('obj', obj)
       return {
         title:obj.innerHTML,
         href:obj.href
@@ -45,64 +55,49 @@ const sleep = time => new Promise(resolve => {
   })
   console.log('所有的标题', title)
 
-
+  for ( var i =0; i < title.length; i++) {
+    // 3.打开要爬取的页面
+    console.log('title[i].href', title[i].href)
+    await page.goto(title[i].href, {
+      waitUntil: 'networkidle2'  // 考虑网络没有超过0时完成网络连接至少500 ms。
+    })
+    // 4.抓取数据写入数据库
+    const content = await page.evaluate(() => {
+      // 获取内容的的标签
+      var elem = document.querySelector('.content')
+      // 获取时间的标签
+      var time = document.querySelector('time')
+      // 获取内容
+      return {
+        time:time.innerHTML,
+        content:elem.innerHTML
+      }
+    })
+    const newobj = Object.assign({
+      href:title[i].href,
+      title:title[i].title
+    },content)
+    // console.log('content',newobj)
+    var kitty = new Article(newobj);
+    // 调用 .save 方法后，mongoose 会去你的 mongodb 中的 test 数据库里，存入一条记录。
+    kitty.save(function (err,doc) {
+      if (err) console.log(err)
+      console.log('保存成功',doc.title);
+    });    
+  }
+  browser.close()
   // 5.触发点击
-  await page.click('.fit a')
-  console.log('测试一下')
-  // 
-
-
 
   // 4.做个延时 等待1000毫秒
+
   // await sleep(1000)
 
   // 5.分析网页结构 获取封面图
-  const result = await page.evaluate(() => {
-    var $ = window.$   // 获取全局对象$ 其实就是jq  ps:这个页面有jq才能拿到没有的话就无法拿到
-    var it = $('.related-pic-video') // 找到这个对象dom
-    if ( it && it.length > 0) {
-      var link = it.attr('href')   // 获取dom元素上面的跳转地址
-      var cover = it.find('img').attr('src')   // 获取封面图
-      return {
-        link,
-        cover
-      }
-    }
-    return {}
-  })
-  console.log('result=',result)
+
+  // 6.我还是很喜欢你啊 
+
+  // 7.关闭浏览器
+
+  // browser.close()
   
-  // 6.分析网页结构 爬取视频
-  let video
-
-  if (result.link) {
-    await page.goto(result.link, {
-      waitUntil: 'networkidle2'  // 考虑网络没有超过0时完成网络连接至少500 ms。      
-    })
-    await sleep(2000)
-
-    // page.evaluate是在页面中执行的代码
-    video = await page.evaluate(() => {
-      var $ = window.$ // 拿到jquery
-      var it = $('source')
-
-      //判断dom节点是否存在
-      if (it && it.length > 0) {
-        return it.attr('src')
-      }
-      return ''      
-    })
-  }
-
-  const data = {
-    video,
-    doubanId,
-    cover:result.cover
-  }
-  console.log('data',data)
-
-
-  // 6.关闭浏览器
-  browser.close()
-
 })()
