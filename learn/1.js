@@ -15,7 +15,7 @@
       <a href="/JohnSundell" data-hydro-click="{&quot;event_type&quot;:&quot;search_result.click&quot;,&quot;payload&quot;:{&quot;page_number&quot;:1,&quot;query&quot;:&quot;john&quot;,&quot;result_position&quot;:2,&quot;click_id&quot;:2466701,&quot;result&quot;:{&quot;id&quot;:2466701,&quot;global_relay_id&quot;:&quot;MDQ6VXNlcjI0NjY3MDE=&quot;,&quot;model_name&quot;:&quot;User&quot;,&quot;url&quot;:&quot;https://github.com/JohnSundell&quot;},&quot;originating_request_id&quot;:&quot;DD9B:82B7:16B8E18:203F8E1:5A879D0D&quot;}}" data-hydro-hmac="f6f563ee6ff9ea12dfd23e8f1883af733b50f926b387c490add0e26e3b49ce44"><em>JohnSundell</em></a>
       <span class="f4 ml-1"><em>John</em> Sundell</span>
         <p class="f5 mt-2">
-          I build apps, games and Swift developer tools! Passionate about open source &amp; developer productivity. You can follow me on Twitter @johnsundell.
+          I 222 build apps, games and Swift developer tools! Passionate about open source &amp; developer productivity. You can follow me on Twitter @johnsundell.
         </p>
       <ul class="user-list-meta d-flex f6 list-style-none text-gray mt-2">
           <li class="mr-3">
