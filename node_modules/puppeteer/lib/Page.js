@@ -95,6 +95,7 @@ class Page extends EventEmitter {
     this._networkManager.on(NetworkManager.Events.RequestFailed, event => this.emit(Page.Events.RequestFailed, event));
     this._networkManager.on(NetworkManager.Events.RequestFinished, event => this.emit(Page.Events.RequestFinished, event));
 
+    client.on('Page.domContentEventFired', event => this.emit(Page.Events.DOMContentLoaded));
     client.on('Page.loadEventFired', event => this.emit(Page.Events.Load));
     client.on('Runtime.consoleAPICalled', event => this._onConsoleAPI(event));
     client.on('Page.javascriptDialogOpening', event => this._onDialog(event));
@@ -141,16 +142,6 @@ class Page extends EventEmitter {
    */
   get coverage() {
     return this._coverage;
-  }
-
-  /**
-   * @param {string} selector
-   */
-  async tap(selector) {
-    const handle = await this.$(selector);
-    console.assert(handle, 'No node found for selector: ' + selector);
-    await handle.tap();
-    await handle.dispose();
   }
 
   /**
@@ -494,7 +485,10 @@ class Page extends EventEmitter {
 
     const requests = new Map();
     const eventListeners = [
-      helper.addEventListener(this._networkManager, NetworkManager.Events.Request, request => requests.set(request.url(), request))
+      helper.addEventListener(this._networkManager, NetworkManager.Events.Request, request => {
+        if (!requests.get(request.url()))
+          requests.set(request.url(), request);
+      })
     ];
 
     const mainFrame = this._frameManager.mainFrame();
@@ -625,7 +619,7 @@ class Page extends EventEmitter {
    * @param {!Page.Viewport} viewport
    */
   async setViewport(viewport) {
-    const needsReload = await this._emulationManager.emulateViewport(this._client, viewport);
+    const needsReload = await this._emulationManager.emulateViewport(viewport);
     this._viewport = viewport;
     if (needsReload)
       await this.reload();
@@ -654,6 +648,14 @@ class Page extends EventEmitter {
   async evaluateOnNewDocument(pageFunction, ...args) {
     const source = helper.evaluationString(pageFunction, ...args);
     await this._client.send('Page.addScriptToEvaluateOnNewDocument', { source });
+  }
+
+  /**
+   * @param {Boolean} enabled
+   * @returns {!Promise}
+   */
+  async setCacheEnabled(enabled = true) {
+    await this._client.send('Network.setCacheDisabled', {cacheDisabled: !enabled});
   }
 
   /**
@@ -810,31 +812,22 @@ class Page extends EventEmitter {
    * @param {string} selector
    * @param {!Object=} options
    */
-  async click(selector, options = {}) {
-    const handle = await this.$(selector);
-    console.assert(handle, 'No node found for selector: ' + selector);
-    await handle.click(options);
-    await handle.dispose();
+  click(selector, options = {}) {
+    return this.mainFrame().click(selector, options);
   }
 
   /**
    * @param {string} selector
    */
-  async hover(selector) {
-    const handle = await this.$(selector);
-    console.assert(handle, 'No node found for selector: ' + selector);
-    await handle.hover();
-    await handle.dispose();
+  focus(selector) {
+    return this.mainFrame().focus(selector);
   }
 
   /**
    * @param {string} selector
    */
-  async focus(selector) {
-    const handle = await this.$(selector);
-    console.assert(handle, 'No node found for selector: ' + selector);
-    await handle.focus();
-    await handle.dispose();
+  hover(selector) {
+    return this.mainFrame().hover(selector);
   }
 
   /**
@@ -842,8 +835,15 @@ class Page extends EventEmitter {
    * @param {!Array<string>} values
    * @return {!Promise<!Array<string>>}
    */
-  async select(selector, ...values) {
+  select(selector, ...values) {
     return this.mainFrame().select(selector, ...values);
+  }
+
+  /**
+   * @param {string} selector
+   */
+  tap(selector) {
+    return this.mainFrame().tap(selector);
   }
 
   /**
@@ -851,11 +851,8 @@ class Page extends EventEmitter {
    * @param {string} text
    * @param {{delay: (number|undefined)}=} options
    */
-  async type(selector, text, options) {
-    const handle = await this.$(selector);
-    console.assert(handle, 'No node found for selector: ' + selector);
-    await handle.type(text, options);
-    await handle.dispose();
+  type(selector, text, options) {
+    return this.mainFrame().type(selector, text, options);
   }
 
   /**
@@ -875,6 +872,15 @@ class Page extends EventEmitter {
    */
   waitForSelector(selector, options = {}) {
     return this.mainFrame().waitForSelector(selector, options);
+  }
+
+  /**
+   * @param {string} xpath
+   * @param {!Object=} options
+   * @return {!Promise}
+   */
+  waitForXPath(xpath, options = {}) {
+    return this.mainFrame().waitForXPath(xpath, options);
   }
 
   /**
@@ -962,6 +968,7 @@ function convertPrintParameterToInches(parameter) {
 Page.Events = {
   Console: 'console',
   Dialog: 'dialog',
+  DOMContentLoaded: 'domcontentloaded',
   Error: 'error',
   // Can't use just 'error' due to node.js special treatment of error events.
   // @see https://nodejs.org/api/events.html#events_error_events

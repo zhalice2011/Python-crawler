@@ -1,7 +1,6 @@
 const puppeteer = require('puppeteer');
 const CREDS = require('../creds'); //引入账号密码
 
-
 async function run() {
   const browser = await puppeteer.launch({
     headless: false, // 可以让他打开网页
