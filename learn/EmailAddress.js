@@ -64,6 +64,25 @@ async function run() {
   console.log('users', users)
 }
 
+async function getNumPages(page) {
+  const NUM_USER_SELECTOR = '#js-pjax-container > div.container > div > div.column.three-fourths.codesearch-results.pr-6 > div.d-flex.flex-justify-between.border-bottom.pb-3 > h3';
+
+  let inner = await page.evaluate((sel) => {
+    return document.querySelector(sel).innerHTML;
+  }, NUM_USER_SELECTOR);
+
+  // 格式是: "69,803 users"
+  inner = inner.replace(',', '').replace(' users', '');
+  const numUsers = parseInt(inner);
+  console.log('numUsers: ', numUsers);
+
+  /*
+   * GitHub 每页显示 10 个结果
+   */
+  const numPages = Math.ceil(numUsers / 10);
+  return numPages;
+}
+
 run();
 
 
