@@ -1,6 +1,8 @@
 
 
 const puppeteer = require('puppeteer');
+const mongoose = require('mongoose');
+const User = require('./models/user');
 
 async function run() {
   const browser = await puppeteer.launch({
@@ -83,6 +85,32 @@ async function getNumPages(page) {
   return numPages;
 }
 
+
+// 更新邮箱的方法
+function upsertUser(userObj) {
+
+    const DB_URL = 'mongodb://localhost/thal';
+    if (mongoose.connection.readyState == 0) {
+      mongoose.connect(DB_URL);
+    }
+
+    // if this email exists, update the entry, don't insert
+    // 如果邮箱存在，就更新实例，不新增
+    const conditions = {
+      email: userObj.email
+    };
+    const options = {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true
+    };
+
+    User.findOneAndUpdate(conditions, userObj, options, (err, result) => {
+      if (err) {
+        throw err;
+      }
+    });
+  }
 run();
 
 
