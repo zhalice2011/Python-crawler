@@ -1,5 +1,3 @@
-
-
 const puppeteer = require('puppeteer');
 const mongoose = require('mongoose');
 const User = require('./models/user');
